@@ -2,6 +2,7 @@ Config = {}
 Config.Debug = false
 Config.BlipForPlane = true
 Config.CrateBlip = true
+Config.Restricted = true -- if the command should be restriced or no 
 
 Config.Drop = {
     Prop = 'prop_drop_armscrate_01', -- Supply Drop, Prop

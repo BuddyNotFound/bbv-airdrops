@@ -3,9 +3,14 @@ RegisterNetEvent('bbv-drop:create:server',function(a,b)
     local item = b
     local src = source
     local id = Wrapper:Identifiers(src)
-    for k,v in pairs(Config.Allowed) do 
-        if v == id.discord then 
-            TriggerClientEvent('bbv-drop:create:client', -1, pos,item)
+    if not Config.Restricted then 
+        TriggerClientEvent('bbv-drop:create:client', -1, pos,item)
+    end
+    if Config.Restricted then 
+        for k,v in pairs(Config.Allowed) do 
+            if v == id.discord then 
+                TriggerClientEvent('bbv-drop:create:client', -1, pos,item)
+            end
         end
     end
 end)
