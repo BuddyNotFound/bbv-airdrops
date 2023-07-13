@@ -1,5 +1,5 @@
 Config = {}
-Config.Debug = true
+Config.Debug = false
 Config.BlipForPlane = true
 Config.CrateBlip = true
 
