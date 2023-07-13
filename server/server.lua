@@ -1,12 +1,9 @@
 RegisterNetEvent('bbv-drop:create:server',function(a,b)
-    print('drop')
     local pos = a
     local item = b
     local src = source
     local id = Wrapper:Identifiers(src)
-    print(pos,item)
     for k,v in pairs(Config.Allowed) do 
-        print(v,id.discord)
         if v == id.discord then 
             TriggerClientEvent('bbv-drop:create:client', -1, pos,item)
         end
