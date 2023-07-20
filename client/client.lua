@@ -147,6 +147,8 @@ RegisterNetEvent('bbv-drop:drop',function(a,b)
 			Wrapper:LoadModel(Config.Drop.Prop)
 			ShootSingleBulletBetweenCoords(pos, ground, 0, false, GetHashKey("weapon_flare"), 0, true, true, -1.0)
 			drop = CreateObject(Config.Drop.Prop,pos,true,true)
+			SetNetworkIdExistsOnAllMachines(drop, true)
+			NetworkUseHighPrecisionBlending(drop, true)
 			SetEntityDynamic(drop,true)
 		end
 		local netid = drop
