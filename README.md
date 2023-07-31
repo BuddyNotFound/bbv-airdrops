@@ -3,7 +3,8 @@
 
 <a href='https://ko-fi.com/G2G0N78P7' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi4.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
-![gif4|600x338](upload://vkX4DFTLn1NYdGkgL8rnfl5TqTK.gif)
+![dba1bb580921ec0ffa3d73234a2ed8ea76045020](https://github.com/BuddyNotFound/bbv-drop/assets/74051918/5a77024e-c809-425f-8d20-2d45baedbfce)
+
 
 >**BBV X WORLD | Supply Drops - FREE**
 
