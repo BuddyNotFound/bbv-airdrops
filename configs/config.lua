@@ -1,12 +1,18 @@
 Config = {}
-Config.Debug = false
+Config.Debug = true
 Config.BlipForPlane = true
 Config.CrateBlip = true
-Config.Restricted = true -- if the command should be restriced or no 
+Config.Restricted = true -- if the commands should be restriced or no [ /drop | /globalairdrop ]
+
+-- ESX = exports["es_extended"]:getSharedObject()
+QBCore = exports['qb-core']:GetCoreObject()
 
 Config.Drop = {
     Prop = 'prop_drop_armscrate_01', -- Supply Drop, Prop
-    Label = "Pick up"
+    Label = "Pick up",
+    Veolicty = 0.01, -- the speed at which the drop will fall.
+    Broadcast = true, -- if set to true when there is a supply drop there will be notifiaction.
+    BroadcastMSG = 'Airdrop Inbound' -- the notification ^
 }
 
 Config.Blip = {
@@ -17,8 +23,8 @@ Config.Blip = {
 }
 
 Config.Settings = {
-    Framework = 'QB', -- QBX/QB/ESX/Custom
-    Target = "OX", -- OX/QB/No # If you DON'T use target set it to 'No'
+    Framework = 'QB', -- /QB/ESX/Custom
+    Target = "ST", -- OX/QB/No # If you DON'T use target set it to 'No'
 }
 
 Config.Vehicle = {

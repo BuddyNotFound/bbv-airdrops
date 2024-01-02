@@ -1,7 +1,11 @@
-Main = {}
+Main = {
+	Reward = {}
+}
 item = {}
+inbound = false
 owner = false
-
+objecttest = nil
+taken = false
 
 RegisterCommand('drop',function(source,args)
     local pos = vector3(tonumber(args[1]),tonumber(args[2]),tonumber(args[3]))
@@ -14,24 +18,74 @@ RegisterCommand('drop',function(source,args)
 	end
 
 
-    TriggerServerEvent('bbv-drop:create:server',pos,item)
+    TriggerServerEvent('bbv-drop:create:server:admin',pos,item)
 end)
 
 
 
-RegisterNetEvent('bbv-drop:create:client',function(a,b)
+RegisterNetEvent('bbv-airdrops:itemdrop',function(data)
+	if inbound then 
+		Wrapper:Notify('There is already an active drop')
+		return
+	end
+	inbound = true
+    local pos = GetEntityCoords(PlayerPedId())
 
+	RequestWeaponAsset(GetHashKey("weapon_flare")) 
+    while not HasWeaponAssetLoaded(GetHashKey("weapon_flare")) do
+        Wait(0)
+    end
+
+	ShootSingleBulletBetweenCoords(pos.x,pos.y,pos.z, pos.x,pos.y ,pos.z - 1, 0, false, GetHashKey("weapon_flare"), 0, true, true, -1.0)
+	owner = true
+	-- Wait(3000)
+	-- --print(json.encode(Items[data].Reward))
+	TriggerServerEvent('bbv-drop:create:server',pos,Items[data].Reward)
+end)
+
+RegisterNetEvent('bbv-airdrops:itemdrop:global',function(data,datapos)
+	if inbound then 
+		-- Wrapper:Notify('already drop')
+		return
+	end
+	Wrapper:Notify('Global Airdrop Inbound')
+	inbound = true
+	pos = datapos
+	RequestWeaponAsset(GetHashKey("weapon_flare")) 
+    while not HasWeaponAssetLoaded(GetHashKey("weapon_flare")) do
+        Wait(0)
+    end
+
+	ShootSingleBulletBetweenCoords(pos.x,pos.y,pos.z, pos.x,pos.y ,pos.z - 1, 0, false, GetHashKey("weapon_flare"), 0, true, true, -1.0)
+	owner = true
+	--print(pos .. ' itemdrop')
+	--print(json.encode(data) .. ' itemdrop')
+	-- Wait(3000)
+	-- --print(json.encode(Items[data].Reward))
+	TriggerServerEvent('bbv-drop:create:server',pos,data)
+end)
+
+
+RegisterNetEvent('bbv-drop:create:client',function(a,b)
+    if Config.Drop.Broadcast then 
+        Wrapper:Notify(Config.Drop.BroadcastMSG)
+        PlaySoundFrontend(-1, "TIMER_STOP", "HUD_MINI_GAME_SOUNDSET", 1)
+    end
+	inbound = true
 	
     if Config.Debug then
-        print('Drop on : '.. a.x .. ' '.. a.y.. ' ' .. a.z .. ' ' .. ' Items : ')
+        --print('Drop on : '.. a.x .. ' '.. a.y.. ' ' .. a.z .. ' ' .. ' Items : ')
     end
+	Main.Reward = b
+	--print(Main.Reward)
     local _pos =  a
     local _item = b
     Wrapper:Blip('drop',Config.Blip.Label,_pos,Config.Blip.Sprite,Config.Blip.Color,Config.Blip.Scale)
+    taken = false
     radius = AddBlipForRadius(_pos, 100.0) -- need to have .0
     SetBlipColour(radius, 1)
     SetBlipAlpha(radius, 128)
-    Main:SpawnPlane(_pos,_item)
+    Main:SpawnPlane(_pos)
 end)
 
 function Main:SpawnPlane(a,b)
@@ -99,12 +153,16 @@ function Main:SpawnPlane(a,b)
 		local pcoords = GetEntityCoords(Vehicle)
         local dist = #(pcoords - _pos)
         if Config.Debug then 
-            print('dist : ' ..dist)
+            --print('dist : ' ..dist)
         end
         if dist < 350 or dropped then
             dropped = true
+            Wait(1000)
+            if dropped then  end
             TaskPlaneMission(Pilot, Vehicle, vehicle, ped, -3500,3500, Config.Vehicle.Height, 6, 0, 0, heading, 2000.0, 400.0)
-			TriggerEvent('bbv-drop:drop',_pos,b)
+			--print('drop')
+			--print(_pos)
+			TriggerEvent('bbv-drop:drop',_pos)
             if dist > 1500 then 
                 DeleteEntity(Vehicle)
                 Vehicle = 0
@@ -130,94 +188,133 @@ function LoadModel(model)
 end
 
 
-
-RegisterNetEvent('bbv-drop:drop',function(a,b)
-	if drop == nil then 
-		local offset = math.random(-100,100)
-		local pos = vector3(a.x + offset,a.y + offset,a.z + 2)
-		local ground = vector3(a.x,a.y,a.z - 100)
-
-		RequestWeaponAsset(GetHashKey("weapon_flare")) 
+RegisterNetEvent('bbv-drop:drop',function(a)
+	blipi = true
+    if drop == nil then
+        local offset = math.random(-100,100)
+        local pos = vector3(a.x + offset,a.y + offset,a.z + 150)
+        local ground = vector3(a.x,a.y,a.z - 100)
+        --print('in drop '..pos)
+        RequestWeaponAsset(GetHashKey("weapon_flare")) 
         while not HasWeaponAssetLoaded(GetHashKey("weapon_flare")) do
             Wait(0)
         end
-		
-		local item = b 
-		if owner then 
-			Wrapper:LoadModel(Config.Drop.Prop)
-			ShootSingleBulletBetweenCoords(pos, ground, 0, false, GetHashKey("weapon_flare"), 0, true, true, -1.0)
-			drop = CreateObject(Config.Drop.Prop,pos,true,true)
-			SetNetworkIdExistsOnAllMachines(drop, true)
-			NetworkUseHighPrecisionBlending(drop, true)
-			SetEntityDynamic(drop,true)
-		end
-		local netid = drop
-		TriggerServerEvent('bbv-drop:synctarget:server','drop',Config.Drop.Label,pos,'bbv-drop:pickup',1,1,drop,item)
-	end
+        if owner then 
+            Wrapper:LoadModel(Config.Drop.Prop)
+            ShootSingleBulletBetweenCoords(pos.x, pos.y, pos.z, ground.x, ground.y, ground.z, 0, false, GetHashKey("weapon_flare"), 0, true, true, -1.0)
+            drop = CreateObject(Config.Drop.Prop, pos.x, pos.y, pos.z, true, true)
+            SetObjectPhysicsParams(drop,99999.0, Config.Drop.Veolicty, 0.0, 0.0, 0.0, 700.0, 0.0, 0.0, 0.0, Config.Drop.Veolicty, 0.0)
+			SetEntityLodDist(drop, 1000) -- so we can see it from the distance
+			ActivatePhysics(drop)
+			SetDamping(drop, 2, 0.1) -- no idea but Rockstar uses it
+			SetEntityVelocity(drop, 0.0, 0.0, math.random() + math.random(-21000, -5500))
+            -- print(drop .. '<--- clien obj id')
+            netid = ObjToNet(drop)
+            TriggerServerEvent('bbv-drop:synctarget:server','drop',Config.Drop.Label,pos,'bbv-drop:pickup',1,1, netid)
+        end
+        -- print(drop .. ' bbv-drop:drop')
+        
+    end
 end)
 
 AddEventHandler('onResourceStop', function(resourceName)
-	if (GetCurrentResourceName() ~= resourceName) then
-	  return
-	end
-	DeleteObject(drop)
-	DeleteEntity(Pilot)
-	DeleteEntity(Vehicle)
+    if (GetCurrentResourceName() ~= resourceName) then
+      return
+    end
+    DeleteObject(drop)
+    DeleteObject(objecttest)
+    DeleteEntity(Pilot)
+    DeleteEntity(Vehicle)
 end)
   
-RegisterNetEvent('bbv-drop:synctarget:client',function(a,b,c,d,e,f,g,item)
-	item = item
-	if Config.Settings.Target ~= "No" then 
-		Wrapper:Target(a,b,c,d,e,f,g)
-		if Config.CrateBlip then 
-			local crateblip = AddBlipForEntity(g)
-			SetBlipSprite(crateblip,306)
-		end
-	end
-	if Config.Settings.Target == "No" then
-		TriggerEvent('bbv-drop:standalone:target',c,g)
-		if Config.CrateBlip then 
-			local crateblip = AddBlipForEntity(g)
-			SetBlipSprite(crateblip,306)
-		end
-	end
+RegisterNetEvent('bbv-drop:synctarget:client',function(a,b,c,d,e,f,g)
+    item = item
+    -- print(g .. ' sync client')
+    TriggerEvent('bbv-drop:standalone:target',c,g)
 end)
 
 RegisterNetEvent('bbv-drop:pickup',function()
-	ExecuteCommand('e pickup')
-	Wait(500)
-	for i=1,#item do 
-		Wrapper:AddItem(item[i],1)
-		DeleteObject(drop)
-		Wrapper:TargetRemove('drop')
-		TriggerServerEvent('bbv-drop:end:server')
-	end
+    ExecuteCommand('e pickup')
+    Wait(500)
+    for i=1,#Main.Reward do 
+        --print(Main.Reward[i])
+        Wrapper:AddItem(Main.Reward[i],1)
+        DeleteObject(drop)
+        DeleteObject(objecttest)
+        TriggerServerEvent('bbv-drop:end:server')
+    end
+end)
+
+RegisterNetEvent('bbv-drop:remove:client',function()
+    inbound = false
+	taken = false
+	blipi = true
+    DeleteObject(drop)
+    DeleteEntity(Pilot)
+    DeleteEntity(Vehicle)
+    DeleteObject(objecttest)
+    drop = nil
+    objecttest = nil
+	b = nil
+    dropped = false
+    item = {}
+    Wrapper:RemoveBlip('drop')
+    RemoveBlip(radius)
 end)
 
 RegisterNetEvent('bbv-drop:end:client',function()
-	Wait(15000)
-	DeleteObject(drop)
-	DeleteEntity(Pilot)
-	DeleteEntity(Vehicle)
-	drop = nil
-	dropped = false
-	item = {}
-	Wrapper:RemoveBlip('drop')
-	RemoveBlip(radius)
+    inbound = false
+	taken = false
+    DeleteObject(drop)
+    DeleteEntity(Pilot)
+    DeleteEntity(Vehicle)
+    DeleteObject(objecttest)
+    drop = nil
+	b = nil
+    objecttest = nil
+    dropped = false
+    item = {}
+    Wrapper:RemoveBlip('drop')
+    RemoveBlip(radius)
 end)
 
-RegisterNetEvent('bbv-drop:standalone:target',function(a,b)
-	_ped = PlayerPedId()
-	while DoesEntityExist(b) do 
-		Wait(0)
-		local pedpos = GetEntityCoords(_ped)
-		local entitypos = GetEntityCoords(b)
-		local dist = #(pedpos - entitypos)
-		if dist < 3 then 
-			Wrapper:Prompt('Press [E] to pickup')
-			if IsControlJustReleased(2, 38) then
-				TriggerEvent('bbv-drop:pickup')
-			end
-		end
+local blipi = true
+
+RegisterNetEvent('bbv-drop:standalone:target',function(a,obj)
+    _ped = PlayerPedId()
+    -- print(obj.. ' <-- obj from server')
+    local b = NetToObj(obj)
+    -- print(a,b  .. ' sync end')
+    -- print(DoesEntityExist(b))
+    while b == 0 do 
+        Wait(1000)
+        b = NetToObj(obj)
+        -- print(b .. ' <-- b in loop')
+    end
+	if Config.CrateBlip then
+		objecttest = b
+		local crateblip = AddBlipForEntity(b)
+		SetBlipSprite(crateblip,306)
+		blipi = false
 	end
+    while b ~= 0 do
+        Wait(0)
+        local pedpos = GetEntityCoords(_ped)
+        local entitypos = GetEntityCoords(b)
+        local dist = #(pedpos - entitypos)
+        if dist < 3 and not taken then 
+            Wrapper:Prompt('Press [E] to pickup')
+            if IsControlJustReleased(2, 38) and not taken then
+                taken = true
+				DeleteObject(b)
+                TriggerServerEvent('bbv-drop:server:pickup')
+                -- TriggerEvent('bbv-drop:pickup')
+            end
+        end
+    end
 end)
+
+RegisterNetEvent('bbv-drop:pickup:taken',function()
+    taken = true
+end)
+

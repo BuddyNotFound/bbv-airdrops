@@ -6,22 +6,25 @@ version '1.2.0'
 
 
 client_scripts {
-    'config.lua',
     'wrapper/cl_wrapper.lua',
     'client/client.lua',
 }
 
 server_scripts {
     'wrapper/sv_wrapper.lua',
-    'server/server.lua'
+    'server/server.lua',
+    'server/items.lua',
+    'server/global.lua',
 }
 
 shared_scripts {
-    'config.lua',
+    'configs/config.lua',
+    'configs/items.lua',
+    'configs/global.lua',
 }
 
 escrow_ignore {
-    'config.lua', 
+    'configs/*.lua', 
     'wrapper/*.lua'
   }
 
